@@ -17,48 +17,28 @@ router.get("/task/:id", async (req, res) => {
   });
 });
 
-// //get all tasks
-// router.get("/tasks", async (req, res) => {
-//   const currentPage = req.query.page || 1;
-//   const listPerPage = 45;
-//   const offset = (currentPage - 1) * listPerPage;
-
-//   const allTasks = await prisma.task.findMany({
-//     skip: offset,
-//     take: listPerPage,
-//   });
-
-//   res.json({
-//     data: allTasks,
-//     meta: { page: currentPage },
-//   });
-// });
-
 //get all filtered, category tasks
 router.get("/tasks", async (req, res) => {
+  var currentPage = req.query.page || 1;
+  const listPerPage = 45;
+  var offset = (currentPage - 1) * listPerPage;
+
   var category = req.query.category;
 
-  var sortIdentifier = "id";
-  var sort = req.query.sort;
+  var sort =
+    req.query.sort !== undefined && Object.keys(req.query.sort).length !== 0
+      ? req.query.sort.split("_")
+      : ["id", "asc"];
 
-  var currentPage = req.query.page || 1;
-
-  console.log(category);
-
-  console.log(sort);
-
-  const listPerPage = 45;
-  const offset = (currentPage - 1) * listPerPage;
+  var orderByObject = {};
+  orderByObject[sort[0]] = sort[1];
+  var orderBySet = [orderByObject];
 
   const allTasks = await prisma.task.findMany({
-    orderBy: [
-      {
-        id: "desc",
-      },
-    ],
     where: { category: category },
     skip: offset,
     take: listPerPage,
+    orderBy: orderBySet,
   });
 
   res.json({
