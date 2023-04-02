@@ -60,8 +60,6 @@ router.post("/tasks", async (req, res) => {
   const taskDiscription = req.body.discription;
   const taskPriority = parseInt(req.body.priority);
 
-  console.log(taskTitle);
-
   if (
     !req.body ||
     !taskUser ||
@@ -71,7 +69,8 @@ router.post("/tasks", async (req, res) => {
     !taskPriority
   ) {
     return res.status(400).json({
-      message: "User, title, categoy, discription or priority is missing",
+      message:
+        "User, title, categoy, discription and/or priority are/is missing",
     });
   }
 
@@ -103,15 +102,49 @@ router.post("/tasks", async (req, res) => {
 
 //update a task
 router.put(`/tasks/:id`, async (req, res) => {
-  const { id } = req.params;
+  const id = req.params.id;
+  const taskUser = req.body.user;
+  const taskTitleLowercase = req.body.title.toLowerCase();
+  const taskTitle =
+    taskTitleLowercase.charAt(0).toUpperCase() + taskTitleLowercase.slice(1);
+  const taskCategoryLowercase = req.body.category.toLowerCase();
+  const taskCategory =
+    taskCategoryLowercase.charAt(0).toUpperCase() +
+    taskCategoryLowercase.slice(1);
+  const taskDiscription = req.body.discription;
+  const taskPriority = parseInt(req.body.priority);
+
+  if (
+    !req.body ||
+    !taskUser ||
+    !taskTitle ||
+    !taskCategory ||
+    !taskDiscription ||
+    !taskPriority
+  ) {
+    return res.status(400).json({
+      message:
+        "User, title, categoy, discription and/or priority are/is missing",
+    });
+  }
+
+  if (taskPriority < 1 || taskPriority > 10) {
+    return res.status(400).json({
+      message: "Task priority must be between 1 and 10",
+    });
+  }
+
+  console.log(req);
   const task = await prisma.task.update({
     where: {
       id: Number(id),
     },
     data: {
-      title: req.body.title,
-      category: req.body.category,
-      discription: req.body.discription,
+      user: taskUser,
+      title: taskTitle,
+      category: taskCategory,
+      discription: taskDiscription,
+      priority: taskPriority,
     },
   });
   res.json(task);
