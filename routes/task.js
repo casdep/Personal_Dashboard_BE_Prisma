@@ -8,43 +8,47 @@ var router = express.Router();
 router.get("/task/:id", async (req, res) => {
   const taskId = parseInt(req.params.id);
 
-  const firstTask = await prisma.task.findFirst({
-    where: { id: taskId },
-  });
-
-  res.json({
-    data: firstTask,
-  });
+  try {
+    const task = await prisma.task.findFirst({
+      where: { id: taskId },
+    });
+    return res.status(200).json({ message: "Task retrieved successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error });
+  }
 });
 
 //get all filtered, category tasks
 router.get("/tasks", async (req, res) => {
   var currentPage = req.query.page || 1;
-  const listPerPage = 45;
+  const listPerPage = 50;
   var offset = (currentPage - 1) * listPerPage;
 
   var category = req.query.category;
 
+  //setting filters from query
   var sort =
     req.query.sort !== undefined && Object.keys(req.query.sort).length !== 0
       ? req.query.sort.split("_")
       : ["id", "asc"];
-
   var orderByObject = {};
   orderByObject[sort[0]] = sort[1];
   var orderBySet = [orderByObject];
 
-  const allTasks = await prisma.task.findMany({
-    where: { category: category },
-    skip: offset,
-    take: listPerPage,
-    orderBy: orderBySet,
-  });
-
-  res.json({
-    data: allTasks,
-    meta: { page: currentPage },
-  });
+  try {
+    const allTasks = await prisma.task.findMany({
+      where: { category: category },
+      skip: offset,
+      take: listPerPage,
+      orderBy: orderBySet,
+    });
+    return res.status(200).json({
+      data: allTasks,
+      meta: { page: currentPage },
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error });
+  }
 });
 
 //create a task
@@ -81,8 +85,6 @@ router.post("/tasks", async (req, res) => {
   }
 
   try {
-    const message = "Task created successfully";
-
     await prisma.task.create({
       data: {
         user: taskUser,
@@ -92,11 +94,9 @@ router.post("/tasks", async (req, res) => {
         priority: taskPriority,
       },
     });
-    console.log("Created a task with the corresponding information");
-    return res.json({ message });
-  } catch (e) {
-    console.error(e);
-    return res.status(500).json({ message: "something went wrong" });
+    return res.status(200).json({ message: "Task created successfully" });
+  } catch (error) {
+    return res.status(500).json({ message: error });
   }
 });
 
@@ -134,36 +134,43 @@ router.put(`/tasks/:id`, async (req, res) => {
     });
   }
 
-  console.log(req);
-  const task = await prisma.task.update({
-    where: {
-      id: Number(id),
-    },
-    data: {
-      user: taskUser,
-      title: taskTitle,
-      category: taskCategory,
-      discription: taskDiscription,
-      priority: taskPriority,
-    },
-  });
-  res.json(task);
+  try {
+    const task = await prisma.task.update({
+      where: {
+        id: Number(id),
+      },
+      data: {
+        user: taskUser,
+        title: taskTitle,
+        category: taskCategory,
+        discription: taskDiscription,
+        priority: taskPriority,
+      },
+    });
+    return res.status(200).json({
+      message: "Task updated",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error });
+  }
 });
 
 //delete a task
 router.delete(`/tasks/:id`, async (req, res) => {
   const { id } = req.params;
-  const task = await prisma.task.delete({
-    // try: {
-    where: {
-      id: Number(id),
-    },
-    // },
-    // catch(error) {
-    // return "Task with id not found";
-    // },
-  });
-  res.json(task);
+
+  try {
+    const task = await prisma.task.delete({
+      where: {
+        id: Number(id),
+      },
+    });
+    return res.status(200).json({
+      message: "Task deleted",
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error });
+  }
 });
 
 module.exports = router;

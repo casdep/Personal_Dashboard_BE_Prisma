@@ -19,3 +19,12 @@ model Task {
   discription String
   priority    Int
 }
+
+model User {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  role      String
+  email     String   @unique
+  username  String   @unique
+  password  String
+}
