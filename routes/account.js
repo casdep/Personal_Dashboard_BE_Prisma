@@ -2,7 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 const bcrypt = require("bcryptjs");
-// const jwt = require("../utils/jwt");
+const jwt = require("jsonwebtoken");
+const secretToken = "mijnGeheimeCode";
 
 var express = require("express");
 var router = express.Router();
@@ -61,36 +62,41 @@ router.post("/users", async (req, res) => {
 
 //Authenticates a user
 router.post("/authenticate", async (req, res) => {
-  const email = req.body.email;
-  const username = req.body.username;
+  const userIdentifier = req.body.userIdentifier;
   const password = req.body.password;
 
-  if (!req.body || (!email && !username) || !password) {
+  if (!req.body || !userIdentifier || !password) {
     return res.status(422).json({
       message: "Emailadress, username and/or password are/is missing",
     });
   }
 
-  const userIdentifier = email ? ["email", email] : ["username", username];
+  const identifierType = userIdentifier.match(/^\S+@\S+\.\S+$/)
+    ? ["email", userIdentifier]
+    : ["username", userIdentifier];
 
   try {
     const user = await prisma.user.findFirst({
       where: {
-        [userIdentifier.key]: userIdentifier.value,
+        [identifierType[0]]: identifierType[1],
       },
     });
 
     const doesPasswordMatch = bcrypt.compareSync(password, user.password);
 
     if (!user || !doesPasswordMatch) {
-      console.log(user);
       return res.status(422).json({
         status: "error authentication failed",
       });
     } else {
+      const token = jwt.sign({ userId: user.id }, secretToken, {
+        expiresIn: "1h",
+      });
+
       return res.status(200).json({
         status: "authorized",
         accountAuthorized: user.email,
+        token: token,
       });
     }
   } catch (error) {
