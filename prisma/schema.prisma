@@ -13,7 +13,7 @@ datasource db {
 model Task {
   id          Int      @id @default(autoincrement())
   createdAt   DateTime @default(now())
-  user        String
+  userId      Int
   title       String
   category    String
   discription String

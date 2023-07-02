@@ -1,12 +1,32 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+const jwt = require("jsonwebtoken");
+
 var express = require("express");
 var router = express.Router();
+
+function validateToken(cookieToken) {
+  const token = cookieToken && cookieToken.split(" ")[1]; // Extract the token from the Authorization header
+  if (!token) {
+    return { error: "Missing token" };
+  }
+  try {
+    const decodedToken = jwt.verify(token, "mijnGeheimeCode");
+    return decodedToken;
+  } catch (error) {
+    return { error: "Invalid token" };
+  }
+}
 
 //get specific task
 router.get("/task/:id", async (req, res) => {
   const taskId = parseInt(req.params.id);
+  const decoded = validateToken(req.headers["authorization"]);
+
+  if (decoded.error) {
+    return res.status(401).json({ message: decoded.error });
+  }
 
   try {
     const task = await prisma.task.findFirst({
@@ -23,8 +43,13 @@ router.get("/tasks", async (req, res) => {
   var currentPage = req.query.page || 1;
   const listPerPage = 50;
   var offset = (currentPage - 1) * listPerPage;
-
   var category = req.query.category;
+  const decoded = validateToken(req.headers["authorization"]);
+
+  if (decoded.error) {
+    console.log(decoded.error);
+    return res.status(401).json({ message: decoded.error });
+  }
 
   //setting filters from query
   var sort =
@@ -37,7 +62,7 @@ router.get("/tasks", async (req, res) => {
 
   try {
     const allTasks = await prisma.task.findMany({
-      where: { category: category },
+      where: { category: category, userId: decoded.userId },
       skip: offset,
       take: listPerPage,
       orderBy: orderBySet,
@@ -63,6 +88,11 @@ router.post("/tasks", async (req, res) => {
     taskCategoryLowercase.slice(1);
   const taskDiscription = req.body.discription;
   const taskPriority = parseInt(req.body.priority);
+  const decoded = validateToken(req.headers["authorization"]);
+
+  if (decoded.error) {
+    return res.status(401).json({ message: decoded.error });
+  }
 
   if (
     !req.body ||
@@ -87,7 +117,7 @@ router.post("/tasks", async (req, res) => {
   try {
     await prisma.task.create({
       data: {
-        user: taskUser,
+        userId: decoded.userId,
         title: taskTitle,
         category: taskCategory,
         discription: taskDiscription,
@@ -113,6 +143,11 @@ router.put(`/tasks/:id`, async (req, res) => {
     taskCategoryLowercase.slice(1);
   const taskDiscription = req.body.discription;
   const taskPriority = parseInt(req.body.priority);
+  const decoded = validateToken(req.headers["authorization"]);
+
+  if (decoded.error) {
+    return res.status(401).json({ message: decoded.error });
+  }
 
   if (
     !req.body ||
@@ -140,7 +175,7 @@ router.put(`/tasks/:id`, async (req, res) => {
         id: Number(id),
       },
       data: {
-        user: taskUser,
+        userId: decoded.userId,
         title: taskTitle,
         category: taskCategory,
         discription: taskDiscription,
@@ -158,6 +193,11 @@ router.put(`/tasks/:id`, async (req, res) => {
 //delete a task
 router.delete(`/tasks/:id`, async (req, res) => {
   const { id } = req.params;
+  const decoded = validateToken(req.headers["authorization"]);
+
+  if (decoded.error) {
+    return res.status(401).json({ message: decoded.error });
+  }
 
   try {
     const task = await prisma.task.delete({
