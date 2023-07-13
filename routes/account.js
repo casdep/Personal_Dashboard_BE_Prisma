@@ -61,47 +61,47 @@ router.post("/users", async (req, res) => {
 });
 
 //Authenticates a user
-router.post("/authenticate", async (req, res) => {
-  const userIdentifier = req.body.userIdentifier;
-  const password = req.body.password;
-
-  if (!userIdentifier || !password) {
-    return res.status(422).json({
-      message: "Email address, username, and/or password are missing",
-    });
-  }
-
-  const identifierType = userIdentifier.match(/^\S+@\S+\.\S+$/)
-    ? ["email", userIdentifier]
-    : ["username", userIdentifier];
-
-  try {
-    const user = await prisma.user.findFirst({
-      where: {
-        [identifierType[0]]: identifierType[1],
-      },
-    });
-
-    const doesPasswordMatch = bcrypt.compareSync(password, user.password);
-
-    if (!user || !doesPasswordMatch) {
+router.post(
+  "/authenticate",
+  async ({ body: { userIdentifier, password } }, res) => {
+    if (!userIdentifier || !password) {
       return res.status(422).json({
-        status: "error authentication failed",
-      });
-    } else {
-      const token = jwt.sign({ userId: user.id }, secretToken, {
-        expiresIn: "7d",
-      });
-
-      return res.status(200).json({
-        status: "authorized",
-        accountAuthorized: user.email,
-        token: token,
+        message: "Email address, username, and/or password are missing",
       });
     }
-  } catch (error) {
-    return res.status(500).json({ message: error });
+
+    const identifierType = userIdentifier.match(/^\S+@\S+\.\S+$/)
+      ? ["email", userIdentifier]
+      : ["username", userIdentifier];
+
+    try {
+      const user = await prisma.user.findFirst({
+        where: {
+          [identifierType[0]]: identifierType[1],
+        },
+      });
+
+      const doesPasswordMatch = bcrypt.compareSync(password, user.password);
+
+      if (!user || !doesPasswordMatch) {
+        return res.status(422).json({
+          status: "error authentication failed",
+        });
+      } else {
+        const token = jwt.sign({ userId: user.id }, secretToken, {
+          expiresIn: "7d",
+        });
+
+        return res.status(200).json({
+          status: "authorized",
+          accountAuthorized: user.email,
+          token: token,
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({ message: error });
+    }
   }
-});
+);
 
 module.exports = router;
