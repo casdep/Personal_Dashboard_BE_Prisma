@@ -65,9 +65,9 @@ router.post("/authenticate", async (req, res) => {
   const userIdentifier = req.body.userIdentifier;
   const password = req.body.password;
 
-  if (!req.body || !userIdentifier || !password) {
+  if (!userIdentifier || !password) {
     return res.status(422).json({
-      message: "Emailadress, username and/or password are/is missing",
+      message: "Email address, username, and/or password are missing",
     });
   }
 
