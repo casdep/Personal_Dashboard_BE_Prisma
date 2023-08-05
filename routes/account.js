@@ -12,7 +12,6 @@ var router = express.Router();
 router.post("/users", async (req, res) => {
   const email = req.body.email;
   const username = req.body.username;
-  const role = req.body.role;
   const password = req.body.password;
   const hashPassword = bcrypt.hashSync(password, 1, "salt");
 
@@ -23,14 +22,7 @@ router.post("/users", async (req, res) => {
   });
 
   //check for missing and wrong information
-  if (
-    !req.body ||
-    !email ||
-    !role ||
-    !username ||
-    !hashPassword ||
-    !["Owner", "Admin", "Member"].includes(role)
-  ) {
+  if (!req.body || !email || !username || !hashPassword) {
     return res.status(422).json({
       message: "Missing and/or wrong information is provided.",
     });
@@ -45,7 +37,6 @@ router.post("/users", async (req, res) => {
       await prisma.user.create({
         data: {
           email: email,
-          role: role,
           username: username,
           password: hashPassword,
         },
@@ -65,13 +56,11 @@ router.post("/authenticate", async (req, res) => {
   const userIdentifier = req.body.userIdentifier;
   const password = req.body.password;
 
-  console.log(req.body, userIdentifier, password);
-
-  // if (!req.body || !userIdentifier || !password) {
-  //   return res.status(422).json({
-  //     message: "Emailadress, username and/or password are/is missing",
-  //   });
-  // }
+  if (!req.body || !userIdentifier || !password) {
+    return res.status(422).json({
+      message: "Emailadress, username and/or password are/is missing",
+    });
+  }
 
   const identifierType = userIdentifier.match(/^\S+@\S+\.\S+$/)
     ? ["email", userIdentifier]
@@ -91,9 +80,13 @@ router.post("/authenticate", async (req, res) => {
         status: "error authentication failed",
       });
     } else {
-      const token = jwt.sign({ userId: user.id }, secretToken, {
-        expiresIn: "7d",
-      });
+      const token = jwt.sign(
+        { userId: user.id, username: user.username },
+        secretToken,
+        {
+          expiresIn: "7d",
+        }
+      );
 
       return res.status(200).json({
         status: "authorized",

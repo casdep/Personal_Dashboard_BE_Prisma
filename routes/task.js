@@ -47,7 +47,6 @@ router.get("/tasks", async (req, res) => {
   const decoded = validateToken(req.headers["authorization"]);
 
   if (decoded.error) {
-    console.log(decoded.error);
     return res.status(401).json({ message: decoded.error });
   }
 
@@ -86,7 +85,12 @@ router.post("/tasks", async (req, res) => {
   const taskCategory =
     taskCategoryLowercase.charAt(0).toUpperCase() +
     taskCategoryLowercase.slice(1);
-  const taskDiscription = req.body.discription;
+  let taskDescription = "";
+  if (req.body.description) {
+    taskDescription = req.body.description;
+  } else {
+    taskDescription = null;
+  }
   const taskPriority = parseInt(req.body.priority);
   const decoded = validateToken(req.headers["authorization"]);
 
@@ -94,17 +98,9 @@ router.post("/tasks", async (req, res) => {
     return res.status(401).json({ message: decoded.error });
   }
 
-  if (
-    !req.body ||
-    !taskUser ||
-    !taskTitle ||
-    !taskCategory ||
-    !taskDiscription ||
-    !taskPriority
-  ) {
+  if (!req.body || !taskUser || !taskTitle || !taskCategory || !taskPriority) {
     return res.status(400).json({
-      message:
-        "User, title, categoy, discription and/or priority are/is missing",
+      message: "User, title, categoy and/or priority are/is missing",
     });
   }
 
@@ -120,12 +116,13 @@ router.post("/tasks", async (req, res) => {
         userId: decoded.userId,
         title: taskTitle,
         category: taskCategory,
-        discription: taskDiscription,
+        description: taskDescription != null ? taskDescription : undefined,
         priority: taskPriority,
       },
     });
     return res.status(200).json({ message: "Task created successfully" });
   } catch (error) {
+    console.log(error);
     return res.status(500).json({ message: error });
   }
 });
@@ -141,7 +138,10 @@ router.put(`/tasks/:id`, async (req, res) => {
   const taskCategory =
     taskCategoryLowercase.charAt(0).toUpperCase() +
     taskCategoryLowercase.slice(1);
-  const taskDiscription = req.body.discription;
+  let taskDescription = "";
+  if (req.body.description) {
+    taskDescription = req.body.description;
+  }
   const taskPriority = parseInt(req.body.priority);
   const decoded = validateToken(req.headers["authorization"]);
 
@@ -149,17 +149,9 @@ router.put(`/tasks/:id`, async (req, res) => {
     return res.status(401).json({ message: decoded.error });
   }
 
-  if (
-    !req.body ||
-    !taskUser ||
-    !taskTitle ||
-    !taskCategory ||
-    !taskDiscription ||
-    !taskPriority
-  ) {
+  if (!req.body || !taskUser || !taskTitle || !taskCategory || !taskPriority) {
     return res.status(400).json({
-      message:
-        "User, title, categoy, discription and/or priority are/is missing",
+      message: "User, title, categoy and/or priority are/is missing",
     });
   }
 
@@ -178,7 +170,7 @@ router.put(`/tasks/:id`, async (req, res) => {
         userId: decoded.userId,
         title: taskTitle,
         category: taskCategory,
-        discription: taskDiscription,
+        ...(taskDescription && { description: taskDescription }),
         priority: taskPriority,
       },
     });
