@@ -39,6 +39,7 @@ router.post("/users", async (req, res) => {
           email: email,
           username: username,
           password: hashPassword,
+          role: "Member"
         },
       });
 
@@ -47,7 +48,7 @@ router.post("/users", async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).json({ message: error });
+    return res.status(500).json({ error });
   }
 });
 
@@ -95,7 +96,7 @@ router.post("/authenticate", async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).json({ message: error });
+    return res.status(500).json({ error });
   }
 });
 

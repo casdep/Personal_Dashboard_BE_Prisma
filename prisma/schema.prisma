@@ -23,7 +23,7 @@ model Task {
 model User {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  role      String
+  role      String   @default("User")
   email     String   @unique
   username  String   @unique
   password  String
