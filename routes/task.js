@@ -86,7 +86,7 @@ router.post("/tasks", async (req, res) => {
     taskCategoryLowercase.charAt(0).toUpperCase() +
     taskCategoryLowercase.slice(1);
   let taskDescription = "";
-  if (req.body.description) {
+  if (req.body.description && req.body.description !== null) {
     taskDescription = req.body.description;
   } else {
     taskDescription = null;
@@ -116,7 +116,7 @@ router.post("/tasks", async (req, res) => {
         userId: decoded.userId,
         title: taskTitle,
         category: taskCategory,
-        description: taskDescription != null ? taskDescription : undefined,
+        description: taskDescription != null ? taskDescription : null,
         priority: taskPriority,
       },
     });
@@ -139,8 +139,11 @@ router.put(`/tasks/:id`, async (req, res) => {
     taskCategoryLowercase.charAt(0).toUpperCase() +
     taskCategoryLowercase.slice(1);
   let taskDescription = "";
-  if (req.body.description) {
+  //check for null-string, because the description would be set to null as a string.
+  if (req.body.description && req.body.description !== "null") {
     taskDescription = req.body.description;
+  } else {
+    taskDescription = null;
   }
   const taskPriority = parseInt(req.body.priority);
   const decoded = validateToken(req.headers["authorization"]);
@@ -170,7 +173,7 @@ router.put(`/tasks/:id`, async (req, res) => {
         userId: decoded.userId,
         title: taskTitle,
         category: taskCategory,
-        ...(taskDescription && { description: taskDescription }),
+        description: taskDescription != null ? taskDescription : null,
         priority: taskPriority,
       },
     });
