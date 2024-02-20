@@ -41,6 +41,12 @@ router.post("/users", async (req, res) => {
     });
   }
 
+  if (username.includes("@")) {
+    return res.status(422).json({
+      message: "Username can't contain the following character: @",
+    });
+  }
+
   try {
     if (emailIsAlreadyRegistred) {
       return res.status(422).json({
@@ -75,6 +81,7 @@ router.post("/users", async (req, res) => {
   }
 });
 
+//Search user
 router.get("/users", async (req, res) => {
   let userIdentifier = req.query.userIdentifier;
   let identifierType = {};
@@ -120,37 +127,6 @@ router.get("/users", async (req, res) => {
   }
 });
 
-router.put(`/users/role/:id`, async (req, res) => {
-  const id = req.params.id;
-  const decoded = validateToken(req.headers["authorization"]);
-
-  if (decoded.userId == id) {
-    return res
-      .status(401)
-      .json({ message: "You can not change your own role" });
-  }
-  if (decoded.role !== "admin") {
-    return res.status(401).json({ message: "User role is not change users" });
-  }
-
-  try {
-    const user = await prisma.user.update({
-      where: {
-        id: Number(id),
-      },
-      data: {
-        role: req.body.role,
-      },
-    });
-    return res.status(200).json({
-      message: "User role succesfully updated",
-    });
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ message: error });
-  }
-});
-
 //Authenticates a user
 router.post("/authenticate", async (req, res) => {
   const userIdentifier = req.body.userIdentifier;
@@ -181,7 +157,12 @@ router.post("/authenticate", async (req, res) => {
       });
     } else {
       const token = jwt.sign(
-        { userId: user.id, username: user.username, role: user.role },
+        {
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
         secretToken,
         {
           expiresIn: "7d",
@@ -196,6 +177,82 @@ router.post("/authenticate", async (req, res) => {
     }
   } catch (error) {
     return res.status(500).json({ error });
+  }
+});
+
+// Update user information (username, email, password, or profile picture)
+router.put(`/users/:id`, async (req, res) => {
+  const userId = parseInt(req.params.id);
+  const { action, value } = req.body;
+  const decoded = validateToken(req.headers["authorization"]);
+
+  try {
+    let updateData = {};
+    switch (action) {
+      case "editName":
+        updateData.username = value;
+        break;
+      case "editEmail":
+        updateData.email = value;
+        break;
+      case "editPassword":
+        updateData.password = value;
+        break;
+      case "editProfilePicture":
+        updateData.profilePicture = value;
+        break;
+      case "editRole":
+        if (decoded.userId === userId) {
+          return res
+            .status(401)
+            .json({ message: "You can not change your own role" });
+        }
+        if (decoded.role !== "admin") {
+          return res
+            .status(401)
+            .json({ message: "You role is not sufficient to change roles" });
+        }
+        updateData.role = value;
+        break;
+      default:
+        return res.status(400).json({ error: "Invalid action" });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: Number(userId),
+      },
+      data: updateData,
+    });
+    res.json(
+      Object.keys(updateData)[0] +
+        " of user " +
+        updatedUser.username +
+        ", has been changed!"
+    );
+  } catch (error) {
+    console.error("Error updating user information:", error);
+    res.status(500).json({ error: "Failed to update user information" });
+  }
+});
+
+// Get user's profile image
+router.get(`/users/profile-picture/:id`, async (req, res) => {
+  const userId = parseInt(req.params.id);
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { profilePicture: true },
+    });
+
+    if (user && user.profilePicture) {
+      res.json({ profilePicture: user.profilePicture });
+    } else {
+      res.json({ message: "Profile picture not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Failed to get profile picture" });
   }
 });
 

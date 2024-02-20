@@ -20,11 +20,19 @@ model Task {
   priority    Int
 }
 
-model User {
+model Note {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
-  role      String   @default("user")
-  email     String   @unique
-  username  String   @unique
-  password  String
+  userId    Int
+  content   String
+}
+
+model User {
+  id             Int      @id @default(autoincrement())
+  createdAt      DateTime @default(now())
+  role           String   @default("user")
+  email          String   @unique
+  username       String   @unique
+  password       String
+  profilePicture String?
 }

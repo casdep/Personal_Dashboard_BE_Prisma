@@ -77,7 +77,6 @@ router.get("/tasks", async (req, res) => {
 
 //create a task
 router.post("/tasks", async (req, res) => {
-  const taskUser = req.body.user;
   const taskTitleLowercase = req.body.title.toLowerCase();
   const taskTitle =
     taskTitleLowercase.charAt(0).toUpperCase() + taskTitleLowercase.slice(1);
@@ -98,9 +97,9 @@ router.post("/tasks", async (req, res) => {
     return res.status(401).json({ message: decoded.error });
   }
 
-  if (!req.body || !taskUser || !taskTitle || !taskCategory || !taskPriority) {
+  if (!req.body || !taskTitle || !taskCategory || !taskPriority) {
     return res.status(400).json({
-      message: "User, title, categoy and/or priority are/is missing",
+      message: "Title, categoy and/or priority are/is missing",
     });
   }
 
@@ -130,7 +129,6 @@ router.post("/tasks", async (req, res) => {
 //update a task
 router.put(`/tasks/:id`, async (req, res) => {
   const id = req.params.id;
-  const taskUser = req.body.user;
   const taskTitleLowercase = req.body.title.toLowerCase();
   const taskTitle =
     taskTitleLowercase.charAt(0).toUpperCase() + taskTitleLowercase.slice(1);
@@ -152,9 +150,9 @@ router.put(`/tasks/:id`, async (req, res) => {
     return res.status(401).json({ message: decoded.error });
   }
 
-  if (!req.body || !taskUser || !taskTitle || !taskCategory || !taskPriority) {
+  if (!req.body || !taskTitle || !taskCategory || !taskPriority) {
     return res.status(400).json({
-      message: "User, title, categoy and/or priority are/is missing",
+      message: "Title, categoy and/or priority are/is missing",
     });
   }
 
