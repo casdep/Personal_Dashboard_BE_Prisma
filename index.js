@@ -5,8 +5,8 @@ const app = express();
 var config = require("./config.json");
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({limit: '50mb'}));
+
 
 var accountRoutes = require("./routes/account");
 var taskRoutes = require("./routes/task");
