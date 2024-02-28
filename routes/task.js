@@ -80,13 +80,17 @@ router.post("/tasks", async (req, res) => {
   const taskTitleLowercase = req.body.title.toLowerCase();
   const taskTitle =
     taskTitleLowercase.charAt(0).toUpperCase() + taskTitleLowercase.slice(1);
+
   const taskCategoryLowercase = req.body.category.toLowerCase();
   const taskCategory =
     taskCategoryLowercase.charAt(0).toUpperCase() +
     taskCategoryLowercase.slice(1);
+
   let taskDescription = "";
   if (req.body.description && req.body.description !== null) {
-    taskDescription = req.body.description;
+    taskDescription =
+      req.body.description.charAt(0).toUpperCase() +
+      req.body.description.slice(1);
   } else {
     taskDescription = null;
   }

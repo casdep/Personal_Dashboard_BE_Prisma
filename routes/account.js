@@ -53,25 +53,14 @@ router.post("/users", async (req, res) => {
         message: "Emailadress already in use",
       });
     } else {
-      if (username == "adminadmin") {
-        await prisma.user.create({
-          data: {
-            email: email,
-            username: username,
-            password: hashPassword,
-            role: "admin",
-          },
-        });
-      } else {
-        await prisma.user.create({
-          data: {
-            email: email,
-            username: username,
-            password: hashPassword,
-            role: "user",
-          },
-        });
-      }
+      await prisma.user.create({
+        data: {
+          email: email,
+          username: username,
+          password: hashPassword,
+          role: "user",
+        },
+      });
       return res.status(200).json({
         message: "Created a user with the corresponding information",
       });
@@ -221,7 +210,7 @@ router.put(`/users/:id`, async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: {
         id: Number(userId),
-      },
+      }, 
       data: updateData,
     });
     res.json(

@@ -43,28 +43,16 @@ router.get("/notes", async (req, res) => {
   var currentPage = req.query.page || 1;
   const listPerPage = 50;
   var offset = (currentPage - 1) * listPerPage;
-  var category = req.query.category;
   const decoded = validateToken(req.headers["authorization"]);
 
   if (decoded.error) {
     return res.status(401).json({ message: decoded.error });
   }
 
-  //setting filters from query
-  var sort =
-    req.query.sort !== undefined && Object.keys(req.query.sort).length !== 0
-      ? req.query.sort.split("_")
-      : ["id", "asc"];
-  var orderByObject = {};
-  orderByObject[sort[0]] = sort[1];
-  var orderBySet = [orderByObject];
-
   try {
     const allNotes = await prisma.note.findMany({
-      where: { category: category, userId: decoded.userId },
+      where: { userId: decoded.userId },
       skip: offset,
-      take: allNotes,
-      orderBy: orderBySet,
     });
     return res.status(200).json({
       data: allNotes,
@@ -77,7 +65,7 @@ router.get("/notes", async (req, res) => {
 
 //create a note
 router.post("/notes", async (req, res) => {
-  let noteContent = "";
+  let noteContent = req.body.noteContent;
   const decoded = validateToken(req.headers["authorization"]);
 
   if (decoded.error) {
