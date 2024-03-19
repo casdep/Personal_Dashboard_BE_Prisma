@@ -95,7 +95,7 @@ router.post("/notes", async (req, res) => {
 //update a note
 router.put(`/notes/:id`, async (req, res) => {
   const id = req.params.id;
-  let noteContent = "";
+  let noteContent = req.body.noteContent;
   const decoded = validateToken(req.headers["authorization"]);
 
   if (decoded.error) {
@@ -114,7 +114,6 @@ router.put(`/notes/:id`, async (req, res) => {
         id: Number(id),
       },
       data: {
-        userId: decoded.userId,
         content: noteContent,
       },
     });
