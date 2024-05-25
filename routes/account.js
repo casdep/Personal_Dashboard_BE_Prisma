@@ -154,7 +154,7 @@ router.post("/authenticate", async (req, res) => {
         },
         secretToken,
         {
-          expiresIn: "7d",
+          expiresIn: "365d",
         }
       );
 
@@ -210,7 +210,7 @@ router.put(`/users/:id`, async (req, res) => {
     const updatedUser = await prisma.user.update({
       where: {
         id: Number(userId),
-      }, 
+      },
       data: updateData,
     });
     res.json(
