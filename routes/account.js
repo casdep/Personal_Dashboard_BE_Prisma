@@ -178,7 +178,7 @@ router.put(`/users/:id`, async (req, res) => {
   try {
     let updateData = {};
     switch (action) {
-      case "editName":
+      case "editUsername":
         updateData.username = value;
         break;
       case "editEmail":
@@ -213,12 +213,36 @@ router.put(`/users/:id`, async (req, res) => {
       },
       data: updateData,
     });
-    res.json(
-      Object.keys(updateData)[0] +
-        " of user " +
-        updatedUser.username +
-        ", has been changed!"
-    );
+
+    // Reissue a new token if the username is updated
+    if (action === "editUsername") {
+      const newToken = jwt.sign(
+        {
+          userId: updatedUser.id,
+          username: updatedUser.username,
+          email: updatedUser.email,
+          role: updatedUser.role,
+        },
+        secretToken,
+        {
+          expiresIn: "365d",
+        }
+      );
+
+      res.json({
+        message:
+          "Username of user " + updatedUser.username + " has been changed!",
+        token: newToken,
+      });
+    } else {
+      res.json({
+        message:
+          Object.keys(updateData)[0] +
+          " of user " +
+          updatedUser.username +
+          " has been changed!",
+      });
+    }
   } catch (error) {
     console.error("Error updating user information:", error);
     res.status(500).json({ error: "Failed to update user information" });
